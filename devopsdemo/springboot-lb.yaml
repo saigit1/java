@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: my-angular-app
-        image: soujanyadevsai/mywebapp:latest
+        image: soujanyadevsai/mywebapp:$BUILD_NUMBER
         imagePullPolicy: Always
         ports:
         - containerPort: 8085

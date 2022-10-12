@@ -17,7 +17,7 @@ spec:
         image: soujanyadevsai/mywebapp:$BUILD_NUMBER
         imagePullPolicy: Always
         ports:
-        - containerPort: 8085
+        - containerPort: 8181
 # service type loadbalancer
 ---
 apiVersion: v1
@@ -29,6 +29,6 @@ spec:
     app: angular-app
   ports:
     - protocol: TCP
-      port: 8085
-      targetPort: 8085
+      port: 8181
+      targetPort: 8181
   type: LoadBalancer

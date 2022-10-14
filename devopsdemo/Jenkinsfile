@@ -1,0 +1,44 @@
+node {
+  def image
+  def mvnHome = tool 'Maven3'
+     stage ('checkout') {
+        checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/saigit1/java.git']]])      
+        }
+   
+    stage ('Build') {
+            sh 'mvn -f devopsdemo clean install'           
+        }
+       
+    stage ('Junit') {
+           junit '**/target/surefire-reports/TEST-*.xml'          
+        }   
+    stage ('Jacaco') {
+            jacoco execPattern: 'target/jacoco-it.exec' 
+        }
+    stage('SonarQube analysis') {
+            def scannerHome = tool 'sonar'
+                withSonarQubeEnv('sonar') {
+                        sh 'mvn -f devopsdemo sonar:sonar \
+                              -Dsonar.projectKey=java \
+                              -Dsonar.host.url=http://3.88.216.6:9000 \
+                              -Dsonar.login=4d68f8115eb00e37c3f04d4bbe0a79565181ea9d'
+                }
+            }
+    stage ('Docker Build') {
+         // Build and push image with Jenkins' docker-plugin
+            withDockerRegistry([credentialsId: "dockerhub", url: "https://index.docker.io/v1/"]) {
+            image = docker.build("soujanyadevsai/mywebapp:$BUILD_NUMBER", "devopsdemo")
+            image.push()    
+            }
+        }
+
+      stage ('K8S Deploy') {
+       
+                kubernetesDeploy(
+                    configs: 'devopsdemo/springboot-lb.yaml',
+                    kubeconfigId: 'K8S',
+                    enableConfigSubstitution: true
+                    )               
+        }
+    
+}
